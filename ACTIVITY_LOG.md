@@ -58,6 +58,15 @@
   4. **Tests passed:** Full end-to-end DRY_RUN pipeline: Bot started → connected → found 20 Polymarket esports events → discovered live match (Dplus KIA vs kt Rolster) → polled every 4s → no errors over 30+ poll cycles
 - **Status:** Phase 4 complete — paper trading ready
 
+### Phase 5: GRID Dota 2 — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `src/data_sources/grid_dota2.py` — GRID GraphQL poller: central-data for live series, series-state for game data, event detection (roshan, barracks, mega creeps, tower, gold swings, team wipes)
+  2. Registered `GridDota2Source` in `src/main.py` — auto-discovers live Dota 2 matches alongside LoL, routes polling to correct source
+  3. **Tests passed:** Module imports OK, gracefully disabled without API key, returns empty match list
+  4. **Note:** Awaiting GRID Open Access approval — will be fully functional once `GRID_API_KEY` is set in `.env`
+- **Status:** Phase 5 complete
+
 ---
 
 <!-- Runtime entries will be appended below this line -->

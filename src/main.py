@@ -16,6 +16,7 @@ from config.settings import (
     LOG_LEVEL,
 )
 from src.data_sources.lol_esports import LoLEsportsSource
+from src.data_sources.grid_dota2 import GridDota2Source
 from src.signals.signal_detector import SignalDetector
 from src.trading.market_finder import MarketFinder
 from src.trading.polymarket_client import PolymarketClient
@@ -44,6 +45,7 @@ class ESPBot:
 
         # Data sources
         self.lol_source = LoLEsportsSource()
+        self.dota2_source = GridDota2Source()
 
     async def start(self) -> None:
         """Initialize everything and begin polling."""
@@ -64,6 +66,7 @@ class ESPBot:
 
         # Data sources
         await self.lol_source.start()
+        await self.dota2_source.start()
 
         # Pre-fetch markets
         await self.market_finder.refresh()
@@ -79,8 +82,10 @@ class ESPBot:
 
         while self._running:
             try:
-                # --- Discover live matches ---
+                # --- Discover live matches from all sources ---
                 live = await self.lol_source.get_live_matches()
+                dota2_live = await self.dota2_source.get_live_matches()
+                live.extend(dota2_live)
                 new_ids = {m["game_id"] for m in live}
 
                 # Add newly discovered matches
@@ -108,16 +113,21 @@ class ESPBot:
                     if not self._running:
                         break
 
-                    state = await self.lol_source.poll_match_state(gid)
+                    # Select the right source for this match
+                    source = self.lol_source
+                    if match_info.get("tournament"):  # GRID matches have tournament field
+                        source = self.dota2_source
+
+                    state = await source.poll_match_state(gid)
                     if state is None:
                         continue
 
-                    previous = self.lol_source.update_previous(gid, state)
+                    previous = source.update_previous(gid, state)
                     if previous is None:
                         continue  # first poll — no comparison yet
 
                     # Detect events
-                    events = self.lol_source.detect_events(state, previous)
+                    events = source.detect_events(state, previous)
                     for event in events:
                         log_activity(
                             "DATA",
@@ -159,6 +169,7 @@ class ESPBot:
         log_activity("SYSTEM", "ESP Bot shutting down")
         logger.info("Shutting down...")
         await self.lol_source.stop()
+        await self.dota2_source.stop()
 
 
 async def run() -> None:
