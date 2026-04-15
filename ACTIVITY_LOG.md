@@ -67,6 +67,17 @@
   4. **Note:** Awaiting GRID Open Access approval — will be fully functional once `GRID_API_KEY` is set in `.env`
 - **Status:** Phase 5 complete
 
+### Phase 6: GRID CS2 — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `src/data_sources/grid_cs2.py` — GRID GraphQL poller for CS2: round wins, match point, 5+ round lead, map wins, event detection
+  2. Registered `GridCS2Source` in `src/main.py` — all 3 data sources (LoL, Dota 2, CS2) now running
+  3. Fixed `lol_esports.py` — handle 204 No Content responses from window API (match between games)
+  4. Fixed `main.py` — ensure `MATCH_POLL_INTERVAL` sleep on every poll cycle (including null states)
+  5. **Tests passed:** Full pipeline starts cleanly with all 3 sources (LoL active, GRID disabled without key). No errors over extended run. 204 responses handled gracefully.
+  6. **Note:** CS2 & Dota 2 sources awaiting GRID API key
+- **Status:** Phase 6 complete — ALL PHASES DONE
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
@@ -85,3 +96,14 @@
 - **[SYSTEM]** `2026-04-15 10:43:36 UTC` — ESP Bot starting in DRY_RUN mode
 - **[SYSTEM]** `2026-04-15 10:43:37 UTC` — All systems initialized — entering main loop
 - **[DATA]** `2026-04-15 10:43:37 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906288)
+- **[SYSTEM]** `2026-04-15 10:49:39 UTC` — ESP Bot starting in DRY_RUN mode
+- **[SYSTEM]** `2026-04-15 10:49:40 UTC` — All systems initialized — entering main loop
+- **[DATA]** `2026-04-15 10:49:40 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906289)
+- **[ERROR]** `2026-04-15 10:49:41 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:49:46 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:49:52 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:49:57 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:50:03 UTC` — Exception in main loop — see logs
+- **[SYSTEM]** `2026-04-15 10:50:21 UTC` — ESP Bot starting in DRY_RUN mode
+- **[SYSTEM]** `2026-04-15 10:50:22 UTC` — All systems initialized — entering main loop
+- **[DATA]** `2026-04-15 10:50:22 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906289)

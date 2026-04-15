@@ -63,6 +63,8 @@ class LoLEsportsSource(BaseDataSource):
         """Fetch the latest window frame for a game."""
         try:
             resp = await self._client.get(f"{LOL_FEED_API}/window/{match_id}")
+            if resp.status_code == 204 or not resp.content:
+                return None
             resp.raise_for_status()
             data = resp.json()
 

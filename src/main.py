@@ -17,6 +17,7 @@ from config.settings import (
 )
 from src.data_sources.lol_esports import LoLEsportsSource
 from src.data_sources.grid_dota2 import GridDota2Source
+from src.data_sources.grid_cs2 import GridCS2Source
 from src.signals.signal_detector import SignalDetector
 from src.trading.market_finder import MarketFinder
 from src.trading.polymarket_client import PolymarketClient
@@ -46,6 +47,7 @@ class ESPBot:
         # Data sources
         self.lol_source = LoLEsportsSource()
         self.dota2_source = GridDota2Source()
+        self.cs2_source = GridCS2Source()
 
     async def start(self) -> None:
         """Initialize everything and begin polling."""
@@ -67,6 +69,7 @@ class ESPBot:
         # Data sources
         await self.lol_source.start()
         await self.dota2_source.start()
+        await self.cs2_source.start()
 
         # Pre-fetch markets
         await self.market_finder.refresh()
@@ -85,7 +88,9 @@ class ESPBot:
                 # --- Discover live matches from all sources ---
                 live = await self.lol_source.get_live_matches()
                 dota2_live = await self.dota2_source.get_live_matches()
+                cs2_live = await self.cs2_source.get_live_matches()
                 live.extend(dota2_live)
+                live.extend(cs2_live)
                 new_ids = {m["game_id"] for m in live}
 
                 # Add newly discovered matches
@@ -115,15 +120,19 @@ class ESPBot:
 
                     # Select the right source for this match
                     source = self.lol_source
-                    if match_info.get("tournament"):  # GRID matches have tournament field
+                    if match_info.get("source") == "cs2":
+                        source = self.cs2_source
+                    elif match_info.get("tournament"):  # GRID Dota 2 matches have tournament field
                         source = self.dota2_source
 
                     state = await source.poll_match_state(gid)
                     if state is None:
+                        await asyncio.sleep(MATCH_POLL_INTERVAL)
                         continue
 
                     previous = source.update_previous(gid, state)
                     if previous is None:
+                        await asyncio.sleep(MATCH_POLL_INTERVAL)
                         continue  # first poll — no comparison yet
 
                     # Detect events
@@ -170,6 +179,7 @@ class ESPBot:
         logger.info("Shutting down...")
         await self.lol_source.stop()
         await self.dota2_source.stop()
+        await self.cs2_source.stop()
 
 
 async def run() -> None:
