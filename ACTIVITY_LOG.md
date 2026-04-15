@@ -78,6 +78,22 @@
   6. **Note:** CS2 & Dota 2 sources awaiting GRID API key
 - **Status:** Phase 6 complete — ALL PHASES DONE
 
+### Phase 7: Deep Verification & Bug Fixes — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Full static code review of ALL 16 source files
+  2. IDE error check — 0 errors
+  3. Wrote comprehensive integration test (`tests/test_full_verification.py`) — 72 test cases across 17 sections
+  4. **Bug #1 FIXED:** `grid_dota2.py` — missing `"source": "dota2"` field and no game_id prefix → added `"source": "dota2"` and `"dota2_"` prefix to prevent routing failures and ID collisions
+  5. **Bug #2 FIXED:** `grid_cs2.py` — duplicate MAP_WIN events fired (both `winner` field change AND `map_state` transition) → removed `winner` check, kept only `map_state == "finished"` transition
+  6. **Bug #3 FIXED:** `main.py` — source routing for Dota 2 used fragile `"tournament"` heuristic → now uses explicit `"source"` field matching
+  7. **Bug #4 FIXED:** `main.py` — `get_live_matches()` discovery API called every loop iteration → throttled to `LIVE_CHECK_INTERVAL` with timestamp tracking
+  8. **Bug #5 FIXED:** `lol_esports.py` — `get_live_matches()` had no error handling (HTTP failure would crash main loop) → wrapped in try/except
+  9. **Bug #6 FIXED:** `grid_dota2.py` & `grid_cs2.py` — `_graphql()` didn't handle 204/empty responses → added status code + empty content check
+  10. **Bug #7 FIXED:** `market_finder.py` — `TEAM_ALIASES` from constants.py was defined but never used in matching → integrated alias expansion into `find_market_for_match()`
+  11. **Tests: 72/72 PASS** after all fixes
+- **Status:** Phase 7 complete — all bugs fixed, verified
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
@@ -107,3 +123,11 @@
 - **[SYSTEM]** `2026-04-15 10:50:21 UTC` — ESP Bot starting in DRY_RUN mode
 - **[SYSTEM]** `2026-04-15 10:50:22 UTC` — All systems initialized — entering main loop
 - **[DATA]** `2026-04-15 10:50:22 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906289)
+- **[SYSTEM]** `2026-04-15 11:00:42 UTC` — Verification test entry
+- **[TRADE]** `2026-04-15 11:00:44 UTC` — [DRY_RUN] Would trade $50.00 BUY_YES on T1 vs GenG | edge=0.150 | price=0.550
+- **[SIGNAL]** `2026-04-15 11:00:44 UTC` — Risk APPROVED: $50.00 on T1 vs G2 | edge=0.150
+- **[SKIP]** `2026-04-15 11:00:44 UTC` — Risk REJECTED: Edge 0.030 < threshold 0.08
+- **[SYSTEM]** `2026-04-15 11:03:18 UTC` — Verification test entry
+- **[TRADE]** `2026-04-15 11:03:20 UTC` — [DRY_RUN] Would trade $50.00 BUY_YES on T1 vs GenG | edge=0.150 | price=0.550
+- **[SIGNAL]** `2026-04-15 11:03:20 UTC` — Risk APPROVED: $50.00 on T1 vs G2 | edge=0.150
+- **[SKIP]** `2026-04-15 11:03:20 UTC` — Risk REJECTED: Edge 0.030 < threshold 0.08

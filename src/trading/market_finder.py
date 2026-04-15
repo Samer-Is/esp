@@ -5,6 +5,7 @@ from typing import Optional
 import httpx
 
 from config.settings import POLYMARKET_GAMMA_API, MIN_MARKET_LIQUIDITY, MARKET_REFRESH_INTERVAL
+from config.constants import TEAM_ALIASES
 
 logger = logging.getLogger(__name__)
 
@@ -56,20 +57,31 @@ class MarketFinder:
             await self.refresh()
         return self._cache
 
+    def _team_names(self, team: str) -> list[str]:
+        """Return all known name variants for a team (original + aliases)."""
+        names = [team.lower()]
+        for canonical, aliases in TEAM_ALIASES.items():
+            if team.lower() == canonical.lower() or team.lower() in [a.lower() for a in aliases]:
+                names.append(canonical.lower())
+                names.extend(a.lower() for a in aliases)
+        return list(set(names))
+
     async def find_market_for_match(
         self, team_a: str, team_b: str
     ) -> Optional[dict]:
         """Find a Polymarket event matching two team names."""
         markets = await self.get_markets()
-        team_a_lower = team_a.lower()
-        team_b_lower = team_b.lower()
+        team_a_names = self._team_names(team_a)
+        team_b_names = self._team_names(team_b)
 
         for event in markets:
             title = event.get("title", "").lower()
             description = event.get("description", "").lower()
             search_text = f"{title} {description}"
 
-            if team_a_lower in search_text and team_b_lower in search_text:
+            a_match = any(n in search_text for n in team_a_names)
+            b_match = any(n in search_text for n in team_b_names)
+            if a_match and b_match:
                 # Check liquidity on the sub-markets
                 sub_markets = event.get("markets", [])
                 for sm in sub_markets:

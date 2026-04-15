@@ -73,6 +73,8 @@ class GridDota2Source(BaseDataSource):
         if variables:
             payload["variables"] = variables
         resp = await self._client.post(url, json=payload)
+        if resp.status_code == 204 or not resp.content:
+            return {}
         resp.raise_for_status()
         result = resp.json()
         if "errors" in result:
@@ -98,11 +100,12 @@ class GridDota2Source(BaseDataSource):
             team_a = teams[0].get("name", "Unknown") if len(teams) > 0 else "Unknown"
             team_b = teams[1].get("name", "Unknown") if len(teams) > 1 else "Unknown"
             matches.append({
-                "game_id": str(node.get("id", "")),
+                "game_id": f"dota2_{node.get('id', '')}",
                 "team_a": team_a,
                 "team_b": team_b,
                 "match_name": f"{team_a} vs {team_b}",
                 "tournament": node.get("tournament", {}).get("name", ""),
+                "source": "dota2",
             })
         return matches
 
@@ -111,9 +114,12 @@ class GridDota2Source(BaseDataSource):
         if not self._client:
             return None
 
+        # Strip dota2_ prefix for GRID API
+        grid_id = match_id.replace("dota2_", "")
+
         try:
             data = await self._graphql(
-                GRID_LIVE_DATA, SERIES_STATE_QUERY, {"id": match_id}
+                GRID_LIVE_DATA, SERIES_STATE_QUERY, {"id": grid_id}
             )
         except httpx.HTTPError as e:
             logger.warning("GRID series-state error for %s: %s", match_id, e)

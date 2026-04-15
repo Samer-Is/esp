@@ -71,6 +71,8 @@ class GridCS2Source(BaseDataSource):
         if variables:
             payload["variables"] = variables
         resp = await self._client.post(url, json=payload)
+        if resp.status_code == 204 or not resp.content:
+            return {}
         resp.raise_for_status()
         result = resp.json()
         if "errors" in result:
@@ -197,13 +199,7 @@ class GridCS2Source(BaseDataSource):
             leader = team_a if round_diff > 0 else team_b
             events.append(self._event(EventType.ECONOMY_BREAK, leader, game_id, match_name, now, {"round_diff": round_diff}))
 
-        # Map win
-        if current.get("winner") and not previous.get("winner"):
-            winner = current["winner"]
-            benefitting = team_a if "a" in str(winner).lower() or team_a.lower() in str(winner).lower() else team_b
-            events.append(self._event(EventType.MAP_WIN, benefitting, game_id, match_name, now, {"map": current.get("map_number")}))
-
-        # Map state changed to finished
+        # Map win — use map_state transition (avoids duplicates with winner field)
         if current.get("map_state") == "finished" and previous.get("map_state") != "finished":
             winner_team = team_a if cur_ra > cur_rb else team_b
             events.append(self._event(EventType.MAP_WIN, winner_team, game_id, match_name, now, {"map": current.get("map_number"), "score": f"{cur_ra}-{cur_rb}"}))

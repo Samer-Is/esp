@@ -82,31 +82,36 @@ class ESPBot:
     async def _main_loop(self) -> None:
         """Discover live matches, poll them, detect events, trade."""
         tracked_matches: dict[str, dict] = {}  # game_id → match info
+        last_discovery: float = 0.0
 
         while self._running:
             try:
-                # --- Discover live matches from all sources ---
-                live = await self.lol_source.get_live_matches()
-                dota2_live = await self.dota2_source.get_live_matches()
-                cs2_live = await self.cs2_source.get_live_matches()
-                live.extend(dota2_live)
-                live.extend(cs2_live)
-                new_ids = {m["game_id"] for m in live}
+                # --- Discover live matches (throttled to LIVE_CHECK_INTERVAL) ---
+                import time as _time
+                now_ts = _time.time()
+                if now_ts - last_discovery >= LIVE_CHECK_INTERVAL or not tracked_matches:
+                    live = await self.lol_source.get_live_matches()
+                    dota2_live = await self.dota2_source.get_live_matches()
+                    cs2_live = await self.cs2_source.get_live_matches()
+                    live.extend(dota2_live)
+                    live.extend(cs2_live)
+                    new_ids = {m["game_id"] for m in live}
+                    last_discovery = now_ts
 
-                # Add newly discovered matches
-                for match in live:
-                    gid = match["game_id"]
-                    if gid not in tracked_matches:
-                        tracked_matches[gid] = match
-                        log_activity("DATA", f"Now tracking: {match['match_name']} (id={gid})")
-                        logger.info("Tracking new match: %s", match["match_name"])
+                    # Add newly discovered matches
+                    for match in live:
+                        gid = match["game_id"]
+                        if gid not in tracked_matches:
+                            tracked_matches[gid] = match
+                            log_activity("DATA", f"Now tracking: {match['match_name']} (id={gid})")
+                            logger.info("Tracking new match: %s", match["match_name"])
 
-                # Remove ended matches
-                ended = [gid for gid in tracked_matches if gid not in new_ids]
-                for gid in ended:
-                    name = tracked_matches[gid]["match_name"]
-                    log_activity("DATA", f"Match ended/removed: {name}")
-                    del tracked_matches[gid]
+                    # Remove ended matches
+                    ended = [gid for gid in tracked_matches if gid not in new_ids]
+                    for gid in ended:
+                        name = tracked_matches[gid]["match_name"]
+                        log_activity("DATA", f"Match ended/removed: {name}")
+                        del tracked_matches[gid]
 
                 if not tracked_matches:
                     logger.debug("No live matches — sleeping %ds", LIVE_CHECK_INTERVAL)
@@ -122,7 +127,7 @@ class ESPBot:
                     source = self.lol_source
                     if match_info.get("source") == "cs2":
                         source = self.cs2_source
-                    elif match_info.get("tournament"):  # GRID Dota 2 matches have tournament field
+                    elif match_info.get("source") == "dota2":
                         source = self.dota2_source
 
                     state = await source.poll_match_state(gid)

@@ -31,11 +31,17 @@ class LoLEsportsSource(BaseDataSource):
 
     async def get_live_matches(self) -> List[dict]:
         """Call getLive and return list of live game IDs with team info."""
-        resp = await self._client.get(
-            f"{LOL_ESPORTS_API}/getLive", params={"hl": "en-US"}
-        )
-        resp.raise_for_status()
-        data = resp.json()
+        try:
+            resp = await self._client.get(
+                f"{LOL_ESPORTS_API}/getLive", params={"hl": "en-US"}
+            )
+            if resp.status_code == 204 or not resp.content:
+                return []
+            resp.raise_for_status()
+            data = resp.json()
+        except httpx.HTTPError as e:
+            logger.warning("LoL getLive error: %s", e)
+            return []
 
         matches = []
         schedule = data.get("data", {}).get("schedule", {})
