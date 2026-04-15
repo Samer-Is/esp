@@ -24,6 +24,18 @@
   8. **Tests passed:** activity logger writes entries, DB initializes with tables, 17 event types + 17 probability adjustments load correctly
 - **Status:** Phase 1 complete
 
+### Phase 2: Polymarket Integration — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `src/trading/polymarket_client.py` — ClobClient wrapper with DRY_RUN support, connect, get_order_book, get_midpoint
+  2. Built `src/trading/market_finder.py` — Gamma API polling for esports markets, team-name matching, liquidity filter
+  3. Built `src/trading/order_executor.py` — FOK market orders via py-clob-client, DRY_RUN simulation
+  4. Built `src/trading/position_tracker.py` — capital tracking, trade recording, P&L computation
+  5. Built `src/risk/risk_manager.py` — edge threshold, position limits, daily loss cap, bet sizing
+  6. Installed all dependencies via `pip install -r requirements.txt`
+  7. **Tests passed:** MarketFinder found 20 real esports events on Polymarket; PolymarketClient connects in DRY_RUN; all modules import cleanly
+- **Status:** Phase 2 complete
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
