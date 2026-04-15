@@ -94,6 +94,28 @@
   11. **Tests: 72/72 PASS** after all fixes
 - **Status:** Phase 7 complete — all bugs fixed, verified
 
+### Phase 8: Command Center Dashboard — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `dashboard/server.py` — FastAPI backend with REST API + WebSocket real-time push
+  2. Built `dashboard/static/index.html` — Full single-page dashboard with modern dark UI:
+     - **6 KPI cards**: Capital, Total P&L, Today's P&L, Win Rate, Open Positions, Total Traded
+     - **Equity curve chart**: Canvas 2D rendered, gradient fill, auto-scales
+     - **Tabbed panel**: Recent Trades / Open Positions / Live Events (with severity badges)
+     - **Live Matches panel**: Shows tracked matches with game badges (LoL/Dota2/CS2)
+     - **Control Panel sidebar**: All config values displayed (mode, edge, bet limits, etc.)
+     - **Probability Shifts reference**: Bar chart of all 17 event type adjustments
+     - **Activity Log viewer**: Last 40 entries from ACTIVITY_LOG.md, color-coded by tag
+     - **Header toolbar**: Status badge (LIVE/OFFLINE/DRY RUN), event/signal/trade counters, uptime clock
+     - **WebSocket**: Auto-reconnects, pushes full dashboard state every 2 seconds
+     - **Connection lost banner**: Shows when WebSocket drops
+  3. Built `run.py` — combined launcher (bot + dashboard in same process, shared state)
+  4. Built `scripts/dashboard_only.py` — dashboard-only mode for viewing history
+  5. Wired `src/main.py` → `dashboard/server.py` BotState: events, signals, trades, matches all pushed live
+  6. Added `fastapi>=0.115.0`, `uvicorn>=0.30.0` to requirements.txt
+  7. **Tested:** Dashboard serves at http://localhost:8888, API returns all KPIs, bot state shows running=True with live match (DPK vs KT Rolster), activity log loads, WebSocket connects
+- **Status:** Phase 8 complete — dashboard fully operational
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
@@ -131,3 +153,6 @@
 - **[TRADE]** `2026-04-15 11:03:20 UTC` — [DRY_RUN] Would trade $50.00 BUY_YES on T1 vs GenG | edge=0.150 | price=0.550
 - **[SIGNAL]** `2026-04-15 11:03:20 UTC` — Risk APPROVED: $50.00 on T1 vs G2 | edge=0.150
 - **[SKIP]** `2026-04-15 11:03:20 UTC` — Risk REJECTED: Edge 0.030 < threshold 0.08
+- **[SYSTEM]** `2026-04-15 11:14:06 UTC` — ESP Bot starting in DRY_RUN mode
+- **[SYSTEM]** `2026-04-15 11:14:07 UTC` — All systems initialized — entering main loop
+- **[DATA]** `2026-04-15 11:14:08 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906289)

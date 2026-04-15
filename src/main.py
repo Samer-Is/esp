@@ -8,6 +8,7 @@ import asyncio
 import logging
 import signal
 import sys
+import time as _time
 
 from config.settings import (
     DRY_RUN,
@@ -77,6 +78,15 @@ class ESPBot:
         self._running = True
         log_activity("SYSTEM", "All systems initialized — entering main loop")
 
+        # Notify dashboard
+        try:
+            from dashboard.server import bot_state
+            bot_state.bot = self
+            bot_state.running = True
+            bot_state.start_time = _time.time()
+        except ImportError:
+            pass
+
         await self._main_loop()
 
     async def _main_loop(self) -> None:
@@ -84,10 +94,15 @@ class ESPBot:
         tracked_matches: dict[str, dict] = {}  # game_id → match info
         last_discovery: float = 0.0
 
+        # Dashboard state helper
+        try:
+            from dashboard.server import bot_state as _ds
+        except ImportError:
+            _ds = None
+
         while self._running:
             try:
                 # --- Discover live matches (throttled to LIVE_CHECK_INTERVAL) ---
-                import time as _time
                 now_ts = _time.time()
                 if now_ts - last_discovery >= LIVE_CHECK_INTERVAL or not tracked_matches:
                     live = await self.lol_source.get_live_matches()
@@ -112,6 +127,10 @@ class ESPBot:
                         name = tracked_matches[gid]["match_name"]
                         log_activity("DATA", f"Match ended/removed: {name}")
                         del tracked_matches[gid]
+
+                    # Sync to dashboard
+                    if _ds:
+                        _ds.tracked_matches = dict(tracked_matches)
 
                 if not tracked_matches:
                     logger.debug("No live matches — sleeping %ds", LIVE_CHECK_INTERVAL)
@@ -149,10 +168,24 @@ class ESPBot:
                             f"in {event.match_name}",
                         )
 
+                        # Push to dashboard
+                        if _ds:
+                            _ds.record_event({
+                                "event_type": event.event_type.value,
+                                "benefitting_team": event.benefitting_team,
+                                "match_name": event.match_name,
+                                "game": event.game.value,
+                                "timestamp": event.timestamp.isoformat(),
+                                "details": event.details,
+                            })
+
                         # Check for trading signal
                         signal_result = await self.signal_detector.evaluate(event)
                         if signal_result is None:
                             continue
+
+                        if _ds:
+                            _ds.record_signal()
 
                         # Risk check
                         decision = self.risk_manager.evaluate(signal_result)
@@ -162,6 +195,9 @@ class ESPBot:
                         # Execute trade
                         bet_amount = decision["bet_amount"]
                         resp = self.order_executor.execute(signal_result, bet_amount)
+
+                        if _ds:
+                            _ds.record_trade()
 
                         # Record trade
                         fill_price = signal_result.market_price  # approximate for DRY_RUN
@@ -182,6 +218,11 @@ class ESPBot:
         self._running = False
         log_activity("SYSTEM", "ESP Bot shutting down")
         logger.info("Shutting down...")
+        try:
+            from dashboard.server import bot_state
+            bot_state.running = False
+        except ImportError:
+            pass
         await self.lol_source.stop()
         await self.dota2_source.stop()
         await self.cs2_source.stop()
