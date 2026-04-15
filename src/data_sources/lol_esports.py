@@ -87,12 +87,14 @@ class LoLEsportsSource(BaseDataSource):
 
     @staticmethod
     def _parse_team(team: dict) -> dict:
+        dragons = team.get("dragons", [])
+        dragon_count = len(dragons) if isinstance(dragons, list) else int(dragons or 0)
         return {
             "totalGold": team.get("totalGold", 0),
             "totalKills": team.get("totalKills", 0),
             "towers": team.get("towers", 0),
             "inhibitors": team.get("inhibitors", 0),
-            "dragons": team.get("dragons", 0),
+            "dragons": dragon_count,
             "barons": team.get("barons", 0),
         }
 

@@ -49,7 +49,30 @@
      - Probability: baron kill at price 0.55 → 0.670 (correct: 0.55 + 0.12)
 - **Status:** Phase 3 complete
 
+### Phase 4: Main Orchestrator — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `src/main.py` — ESPBot orchestrator with startup, main polling loop (discover→poll→detect→signal→risk→trade), graceful shutdown
+  2. Built `scripts/paper_trade.py` — DRY_RUN=true forced wrapper
+  3. Fixed `lol_esports.py` — API returns `dragons` as a list (of dragon types), not an int. Changed `_parse_team` to use `len(dragons)`.
+  4. **Tests passed:** Full end-to-end DRY_RUN pipeline: Bot started → connected → found 20 Polymarket esports events → discovered live match (Dplus KIA vs kt Rolster) → polled every 4s → no errors over 30+ poll cycles
+- **Status:** Phase 4 complete — paper trading ready
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
 - **[SYSTEM]** `2026-04-15 10:36:16 UTC` — Phase 1 test — activity logger works
+- **[SYSTEM]** `2026-04-15 10:42:20 UTC` — ESP Bot starting in DRY_RUN mode
+- **[SYSTEM]** `2026-04-15 10:42:21 UTC` — All systems initialized — entering main loop
+- **[DATA]** `2026-04-15 10:42:21 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906288)
+- **[ERROR]** `2026-04-15 10:42:22 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:27 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:33 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:38 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:43 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:49 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:42:54 UTC` — Exception in main loop — see logs
+- **[ERROR]** `2026-04-15 10:43:00 UTC` — Exception in main loop — see logs
+- **[SYSTEM]** `2026-04-15 10:43:36 UTC` — ESP Bot starting in DRY_RUN mode
+- **[SYSTEM]** `2026-04-15 10:43:37 UTC` — All systems initialized — entering main loop
+- **[DATA]** `2026-04-15 10:43:37 UTC` — Now tracking: Dplus KIA vs kt Rolster (id=115548128962906288)
