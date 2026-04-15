@@ -36,6 +36,19 @@
   7. **Tests passed:** MarketFinder found 20 real esports events on Polymarket; PolymarketClient connects in DRY_RUN; all modules import cleanly
 - **Status:** Phase 2 complete
 
+### Phase 3: LoL + Signal Detection — Completed
+- **Date:** 2026-04-15
+- **Actions:**
+  1. Built `src/data_sources/base_source.py` — abstract base class with start/stop/get_live_matches/poll_match_state/detect_events
+  2. Built `src/data_sources/lol_esports.py` — full LoL Esports API poller: getLive discovery, window/{gameId} polling, event detection for baron/dragon/inhibitor/tower/ace/gold swings
+  3. Built `src/signals/probability.py` — additive probability model using constants table, clamped to [0.01, 0.99]
+  4. Built `src/signals/signal_detector.py` — event→market lookup→probability→edge→TradingSignal pipeline
+  5. **Tests passed:**
+     - LoL API returned 1 live match: Dplus KIA vs kt Rolster
+     - Mock event detection found 4 events (baron_kill, inhibitor_destroyed, tower_destroyed, gold_lead_5k)
+     - Probability: baron kill at price 0.55 → 0.670 (correct: 0.55 + 0.12)
+- **Status:** Phase 3 complete
+
 ---
 
 <!-- Runtime entries will be appended below this line -->
